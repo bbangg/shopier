@@ -2,7 +2,7 @@
   "name": "shopier",
   "version": "1.0.0",
   "description": "TypeScript SDK for Shopier REST API v1",
-  "author": "Shopier",
+  "author": "bbangg",
   "license": "MIT",
   "type": "module",
   "main": "./dist/index.cjs",
