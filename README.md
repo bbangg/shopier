@@ -14,13 +14,13 @@ A fully-typed TypeScript SDK for the Shopier REST API v1.
 ## Installation
 
 ```bash
-npm install shopier
+npm install @bbangg/shopier
 ```
 
 ## Quick Start
 
 ```typescript
-import { ShopierClient } from 'shopier';
+import { ShopierClient } from '@bbangg/shopier';
 
 const client = new ShopierClient({
   accessToken: 'your_personal_access_token',
