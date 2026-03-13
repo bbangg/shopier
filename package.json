@@ -1,7 +1,7 @@
 {
   "name": "@bbangg/shopier",
   "version": "1.0.0",
-  "description": "TypeScript SDK for Shopier REST API v1",
+  "description": "Unofficial Shopier SDK",
   "author": "bbangg",
   "license": "MIT",
   "type": "module",
@@ -37,6 +37,15 @@
     "api",
     "ecommerce",
     "typescript",
-    "node"
-  ]
+    "node",
+    "payment"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bbangg/shopier.git"
+  },
+  "bugs": {
+    "url": "https://github.com/bbangg/shopier/issues"
+  },
+  "homepage": "https://github.com/bbangg/shopier#readme"
 }
