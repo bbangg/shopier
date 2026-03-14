@@ -1,15 +1,10 @@
 # Shopier Node.js SDK
 
-A fully-typed TypeScript SDK for the Shopier REST API v1.
+[![npm version](https://img.shields.io/npm/v/@bbangg/shopier.svg?style=flat-square)](https://www.npmjs.com/package/@bbangg/shopier)
+[![npm downloads](https://img.shields.io/npm/dm/@bbangg/shopier.svg?style=flat-square)](https://www.npmjs.com/package/@bbangg/shopier)
+[![license](https://img.shields.io/npm/l/@bbangg/shopier.svg?style=flat-square)](https://github.com/bbangg/shopier/blob/main/LICENSE)
 
-## Features
-
-- **Zero Runtime Dependencies** — Uses native `fetch` (Node.js 18+).
-- **Fully Typed** — Comprehensive TypeScript interfaces for all API resources.
-- **Resource-Oriented** — Ergonomic sub-clients (e.g., `client.products.list()`).
-- **Rate-Limit Handling** — Built-in auto-retry with `Retry-After` support.
-- **Pagination Support** — Easy access to pagination metadata from headers.
-- **Dual ESM/CJS Output** — Compatible with both modern and legacy Node.js projects.
+Unofficial Shopier SDK for Node.js.
 
 ## Installation
 
@@ -26,60 +21,76 @@ const client = new ShopierClient({
   accessToken: 'your_personal_access_token',
 });
 
-// List products
-const response = await client.products.list({ limit: 10 });
-console.log(response.data); // Array of products
-console.log(response.pagination); // { page: 1, limit: 10, totalPages: 5, totalItems: 48 }
-
 // Create a product
 const product = await client.products.create({
-  title: 'My New Product',
+  title: 'Awesome T-Shirt',
   type: 'physical',
-  media: [{ type: 'image', url: 'https://example.com/image.jpg', placement: 1 }],
   priceData: {
     currency: 'TRY',
-    price: '100.00',
+    price: '299.90',
   },
-  shippingPayer: 'sellerPays',
+  shippingPayer: 'buyerPays',
+  media: [{ type: 'image', url: 'https://example.com/image.jpg', placement: 1 }]
 });
 
-// Handle errors
-try {
-  const order = await client.orders.get('invalid-id');
-} catch (error) {
-  if (error instanceof ShopierNotFoundError) {
-    console.error('Order not found');
-  }
+console.log(`Product created with ID: ${product.id}`);
+console.log(`Product link: ${product.url}`);
+```
+
+## Features
+
+- **Type-Safe by Design**: Full TypeScript support for all API resources and models.
+- **Resource-Oriented**: Logical organization mirroring Shopier's API structure.
+- **Auto-Retry & Rate Limiting**: Intelligent handling of API limits and transient errors.
+- **Webhook Utilities**: Built-in validation helper for secure payment notifications.
+- **Zero Dependencies**: Lightweight and optimized for modern Node.js environments.
+
+## Usage
+
+### Resource Clients
+
+The SDK provides sub-clients for every Shopier resource. For example, to manage products:
+
+```typescript
+import { ShopierClient } from '@bbangg/shopier';
+
+const client = new ShopierClient({ accessToken: 'YOUR_PAT' });
+
+const product = await client.products.create({
+  title: 'Example Product',
+  type: 'physical',
+  priceData: { currency: 'TRY', price: '100.00' },
+  shippingPayer: 'sellerPays',
+  media: [{ type: 'image', url: 'https://...', placement: 1 }]
+});
+
+console.log(product.id, product.url);
+```
+
+### Webhook Validation
+
+Shopier sends webhooks for payment events. Use the `Webhook` class to verify the authenticity of these requests:
+
+```typescript
+import { Webhook } from '@bbangg/shopier';
+
+const webhook = new Webhook({ token: 'YOUR_WEBHOOK_TOKEN' });
+
+// In your Express handler
+const signature = req.headers['shopier-signature'];
+const body = req.body; // Ensure raw body or parsed JSON
+
+if (webhook.validate(body, signature)) {
+  console.log('Valid webhook received!', body);
+} else {
+  console.error('Invalid signature');
 }
 ```
 
-## Resources
+## Known Issues
 
-The SDK provides sub-clients for all Shopier API resources:
-
-- `client.products`
-- `client.orders`
-- `client.categories`
-- `client.variations`
-- `client.selections`
-- `client.discountCodes`
-- `client.automaticDiscounts`
-- `client.shippings`
-- `client.webhooks`
-- `client.balance`
-- `client.payouts`
-- `client.refunds`
-- `client.shop`
-
-## Configuration
-
-```typescript
-const client = new ShopierClient({
-  accessToken: '...',
-  baseUrl: 'https://api.shopier.com/v1', // Optional
-  maxRetries: 3, // Optional: Number of automatic retries on rate limit (429)
-});
-```
+- **Resource Limitations**: Some resources (e.g., `products.list`) may return an "Access to this resource on the server is denied" error. This is likely due to account-specific API restrictions. We recommend contacting Shopier support if you encounter this.
+- **Webhook Gateway Timeouts**: Creating duplicate webhook configurations for the same event type might cause Shopier's API to return a Gateway Timeout. We recommend checking existing webhooks before creating new ones.
 
 ## License
 
