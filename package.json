@@ -1,6 +1,6 @@
 {
   "name": "@bbangg/shopier",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "Unofficial Shopier SDK",
   "author": "bbangg",
   "license": "MIT",
@@ -28,6 +28,7 @@
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
+    "@types/node": "^25.5.0",
     "tsup": "^8.0.0",
     "typescript": "^5.0.0"
   },

@@ -72,6 +72,14 @@ export class ShopierInternalError extends ShopierError {
   }
 }
 
+export class ShopierTimeoutError extends ShopierError {
+  constructor(status: number, statusText: string, body: any) {
+    super(status, statusText, body);
+    this.name = 'ShopierTimeoutError';
+    Object.setPrototypeOf(this, ShopierTimeoutError.prototype);
+  }
+}
+
 export function createShopierError(status: number, statusText: string, body: any, headers?: Headers): ShopierError {
   switch (status) {
     case 400:
@@ -89,6 +97,10 @@ export function createShopierError(status: number, statusText: string, body: any
       const retryAfter = retryAfterHeader ? parseInt(retryAfterHeader, 10) : 60;
       return new ShopierRateLimitError(statusText, body, retryAfter);
     }
+    case 502:
+    case 503:
+    case 504:
+      return new ShopierTimeoutError(status, statusText, body);
     default:
       if (status >= 500) {
         return new ShopierInternalError(status, statusText, body);

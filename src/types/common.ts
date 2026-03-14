@@ -34,4 +34,5 @@ export interface ShopierClientOptions {
   accessToken: string;
   baseUrl?: string;
   maxRetries?: number;
+  timeout?: number;
 }

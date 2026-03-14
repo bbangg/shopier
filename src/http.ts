@@ -1,15 +1,17 @@
-import { createShopierError } from './errors.ts';
+import { createShopierError, ShopierTimeoutError } from './errors.ts';
 import type { PaginatedResponse, PaginationParams, ShopierClientOptions } from './types/common.ts';
 
 export class HttpClient {
   private accessToken: string;
   private baseUrl: string;
   private maxRetries: number;
+  private timeout: number;
 
   constructor(options: ShopierClientOptions) {
     this.accessToken = options.accessToken;
     this.baseUrl = options.baseUrl?.replace(/\/$/, '') || 'https://api.shopier.com/v1';
     this.maxRetries = options.maxRetries ?? 3;
+    this.timeout = options.timeout ?? 30000;
   }
 
   public async get<T>(path: string, params?: Record<string, any>): Promise<T> {
@@ -85,23 +87,36 @@ export class HttpClient {
       headers.set('Content-Type', 'application/json');
     }
 
-    const response = await fetch(url.toString(), {
-      method,
-      headers,
-      body: options.body ? JSON.stringify(options.body) : undefined,
-    });
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), this.timeout);
 
-    if (response.status === 429 && retryCount < this.maxRetries) {
-      const retryAfter = parseInt(response.headers.get('Retry-After') || '60', 10);
-      await new Promise(resolve => setTimeout(resolve, retryAfter * 1000));
-      return this.requestFullResponse(method, path, options, retryCount + 1);
+    try {
+      const response = await fetch(url.toString(), {
+        method,
+        headers,
+        body: options.body ? JSON.stringify(options.body) : undefined,
+        signal: controller.signal,
+      });
+
+      if (response.status === 429 && retryCount < this.maxRetries) {
+        const retryAfter = parseInt(response.headers.get('Retry-After') || '60', 10);
+        await new Promise(resolve => setTimeout(resolve, retryAfter * 1000));
+        return this.requestFullResponse(method, path, options, retryCount + 1);
+      }
+
+      if (!response.ok) {
+        const body = await response.json().catch(() => ({}));
+        throw createShopierError(response.status, response.statusText, body, response.headers);
+      }
+
+      return response;
+    } catch (error: any) {
+      if (error.name === 'AbortError') {
+        throw new ShopierTimeoutError(408, 'Request Timeout', { message: `Request timed out after ${this.timeout}ms` });
+      }
+      throw error;
+    } finally {
+      clearTimeout(timeoutId);
     }
-
-    if (!response.ok) {
-      const body = await response.json().catch(() => ({}));
-      throw createShopierError(response.status, response.statusText, body, response.headers);
-    }
-
-    return response;
   }
 }
