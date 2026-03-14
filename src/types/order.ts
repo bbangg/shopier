@@ -97,8 +97,14 @@ export interface Order {
   refunds: OrderRefundSummary[];
 }
 
+export interface OrderFulfillmentInput {
+  productType?: ProductType;
+  note?: string;
+}
+
 export interface UpdateOrderInput {
-  status: FulfillmentStatus;
+  status?: FulfillmentStatus;
+  fulfillments?: OrderFulfillmentInput;
 }
 
 export interface ListOrdersParams extends PaginationParams {
